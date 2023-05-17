@@ -76,6 +76,37 @@ class UserCustomController extends Controller
 
         return $this->render('index', compact('dataProvider', 'userCustom', 'user'));
     }
+    public function actionIndexDataTable()
+    {
+        $dataProvider = new ActiveDataProvider([
+            'query' => UserCustom::find(),
+        ]);
+        $userCustom = new UserCustom;
+        $user = new User;
+
+        if ($this->request->isPost) {
+            if ($userCustom->load($this->request->post()) && $user->load($this->request->post())) {
+                $user->auth_key        = Yii::$app->security->generateRandomString();
+                $user->password_hash   = Yii::$app->security->generatePasswordHash($user->password);
+                $user->status          = 1;
+                $user->created_at      = time();
+                $user->updated_at      = time();
+                $user->email_confirmed = 1;
+                if ($user->save()) {
+                    $userCustom->use_fkuser = $user->id;
+                    // if ($userCustom->save()) {
+                    //     $userCustom = new UserCustom;
+                    //     $user = new User;
+                    // }
+                    $userCustom->save();
+                }
+            }
+        } else {
+            $userCustom->loadDefaultValues();
+        }
+
+        return $this->render('index-datatable', compact('dataProvider', 'userCustom', 'user'));
+    }
 
     public function actionView($id)
     {
